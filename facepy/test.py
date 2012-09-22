@@ -42,6 +42,36 @@ class User(object):
         """
         self.graph.delete(self.id)
 
+    def befriend(self, other):
+        """
+        Befriend other user.
+
+        :param other: Another test User
+        """
+        r = self.graph.get('me/friends/%s' % other.id)
+        if 'data' in r and r['data'] and r['data'][0]['id'] == other.id:
+            # already friends
+            return
+
+        self.graph.post('%s/friends/%s' % (self.id, other.id))
+        other.graph.post('%s/friends/%s' % (other.id, self.id))
+
+    @classmethod
+    def users(self, application_id, access_token, **parameters):
+        """
+        Get existing test users.
+        """
+        r = GraphAPI(access_token).get('%s/accounts/test-users' % application_id, **parameters)
+        for u in r['data']:
+            yield User(u['id'], u['access_token'], u['login_url'], None, None)
+
+    @property
+    def me(self):
+        """
+        Get user information.
+        """
+        return self.graph.get('me')
+
     def __enter__(self):
         return self
 
